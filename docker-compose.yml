@@ -22,7 +22,7 @@ services:
   # ── Inventory Domain Connector ────────────────────────────────────────────
   # Internal Python service — only reachable from gateway, not the public internet.
   inventory-connector:
-    build: ./domain-connectors/inventory
+    build: ./backend/domain-connectors/inventory
     environment:
       DATABASE_URL: postgresql://user:password@postgres:5432/mcp_gateway
       PORT:         8001
@@ -33,7 +33,7 @@ services:
   # ── Gateway ───────────────────────────────────────────────────────────────
   # Public-facing Node.js service — the only container with a host port exposed.
   gateway:
-    build: ./gateway
+    build: ./backend/gateway
     environment:
       DATABASE_URL: postgresql://user:password@postgres:5432/mcp_gateway
       JWT_SECRET:   change_me_to_a_strong_random_secret

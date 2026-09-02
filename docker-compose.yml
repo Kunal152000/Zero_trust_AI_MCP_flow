@@ -1,0 +1,48 @@
+services:
+
+  # ── Postgres ─────────────────────────────────────────────────────────────
+  # Single DB instance: stores RBAC tables, audit log, and API keys.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB:       mcp_gateway
+      POSTGRES_USER:     user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./infrastructure/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:     ["CMD-SHELL", "pg_isready -U user -d mcp_gateway"]
+      interval: 5s
+      timeout:  5s
+      retries:  5
+
+  # ── Inventory Domain Connector ────────────────────────────────────────────
+  # Internal Python service — only reachable from gateway, not the public internet.
+  inventory-connector:
+    build: ./domain-connectors/inventory
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/mcp_gateway
+      PORT:         8001
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── Gateway ───────────────────────────────────────────────────────────────
+  # Public-facing Node.js service — the only container with a host port exposed.
+  gateway:
+    build: ./gateway
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/mcp_gateway
+      JWT_SECRET:   change_me_to_a_strong_random_secret
+      PORT:         3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

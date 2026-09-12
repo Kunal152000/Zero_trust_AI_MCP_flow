@@ -36,6 +36,21 @@ CREATE TABLE IF NOT EXISTS audit_log (
   timestamp TIMESTAMPTZ  NOT NULL
 );
 
+-- ── Authentication ────────────────────────────────────────────────────────
+-- Stores admin dashboard users. Separate from the RBAC user_roles table.
+-- password_hash is NULL for Google-only accounts; google_id is NULL for manual accounts.
+-- refresh_token_hash enforces a strict 1-to-1 session: a new login overwrites the old token.
+CREATE TABLE IF NOT EXISTS users (
+  id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  email               TEXT        UNIQUE NOT NULL,
+  password_hash       TEXT,
+  google_id           TEXT        UNIQUE,
+  name                TEXT,
+  refresh_token_hash  TEXT,
+  refresh_expires_at  TIMESTAMPTZ,
+  created_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ── Seed data ─────────────────────────────────────────────────────────────
 -- Insert roles first (FK anchor), then permission tables.
 -- ON CONFLICT DO NOTHING makes this idempotent.

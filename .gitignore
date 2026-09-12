@@ -4,3 +4,10 @@ __pycache__/
 .env
 understand_project
 node_modules
+
+# Ignore all markdown files except Readme
+*.md
+ponytail.md
+!Readme.md
+!README.md
+
